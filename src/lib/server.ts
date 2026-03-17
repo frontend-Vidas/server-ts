@@ -1,4 +1,7 @@
 import http, { IncomingMessage, ServerResponse } from 'node:http';
+//import { text } from 'node:stream/consumers';
+import { file } from './file.js';
+
 
 type Server = {
     init: () => void;
@@ -8,32 +11,45 @@ type Server = {
 
 const server = {} as Server;
 
-server.httpServer = http.createServer((req: IncomingMessage, res: ServerResponse) => {
-    console.log(req.url);
+server.httpServer = http.createServer(async (req: IncomingMessage, res: ServerResponse) => {
+    const socket = req.socket as any;
+    const encryption = socket.encryption as any;
+    const ssl = encryption !== undefined ? 's' : '';
 
-const isTextFile = false; // galune: .css, .js, .svg, ...
-const isBinaryFile = false; // galune: .png, .jpg, .webp, .eot, .ttf, ...
-const isAPI = false; // url prasideda: /api/...
-const isPage = !isTextFile && !isBinaryFile && !isAPI; // nera failas ir nera api
+    const baseURL = `https${ssl}://${req.headers.host}`
+    const parsedURL = new URL(req.url ?? '', baseURL);
+    const httpMethod = req.method ? req.method.toLocaleLowerCase() : 'get';
+    const trimmedPath = parsedURL.pathname
+        .replace(/^\/+|\/+$/g, '')
+        .replace(/\/\/+/g, '/');
 
-    // puslapio html
-    // failai:
-    // - tekstiniai:
-    //      - css failu
-    //      - js failu
-    //      - svg failu
-    // - ne tekstiniai:
-    //      - img failu: png, jpg, webp, gif...
-    //      - fonts failu
-    //      - video failu
-    //      - audio failu
-    //      - pdf failu
-    // duomenu JSON //fb, twitter, linkedin
+    const textFileExtensions = ['css', 'js', 'svg', 'webmanifest'];
+    const binaryFileExtensions = ['png', 'jpg', 'jpeg', 'webp', 'ico', 'eot', 'ttf', 'woff', 'woff2', 'otf'];
+    const fileExtension = trimmedPath.slice(trimmedPath.lastIndexOf('.')+1);
+
+    const isTextFile = textFileExtensions.includes(fileExtension); // galune: .css, .js, .svg, ...
+    const isBinaryFile = binaryFileExtensions.includes(fileExtension); // galune: .png, .jpg, .webp, .eot, .ttf, ...
+    const isAPI = trimmedPath.startsWith('api/'); // url prasideda: /api/...
+    const isPage = !isTextFile && !isBinaryFile && !isAPI; // nera failas ir nera api
+
+    console.log(httpMethod, trimmedPath);
 
     let responseContent = 'ERROR: neturiu tai, ko tu nori...';
 
-    if (req.url === '/'){
-        responseContent = `<!DOCTYPE html>
+    if (isTextFile){
+       responseContent = 'TEKSTINIS FAILAS';
+    }
+
+    if (isBinaryFile){
+       responseContent = 'BINARY FAILAS';
+    }
+    
+    if (isAPI){
+       responseContent = 'API DUOMENYS';
+    }
+
+    if (isPage){
+       responseContent = `<!DOCTYPE html>
         <html lang="en">
         
         <head>
@@ -53,8 +69,13 @@ const isPage = !isTextFile && !isBinaryFile && !isAPI; // nera failas ir nera ap
             <link rel="stylesheet" href="/css/button.css">
             <link rel="stylesheet" href="/css/header.css">
             <link rel="stylesheet" href="/css/main.css">
-        
-        
+
+            <link rel="stylesheet" href="/css/main.css">
+            <link rel="stylesheet" href="/css/main.min.css">
+            <link rel="stylesheet" href="/css/main.6dkdlg8hf71.css">
+            <link rel="stylesheet" href="/css/main.6dkdlg8hf71.6dkdlg8hf71.css">
+            <link rel="stylesheet" href="/css/main.css?v=2">
+            <link rel="stylesheet" href="/css/main.css?v=6dkdlg8hf71">
         </head>
         
         <body>
@@ -87,13 +108,16 @@ const isPage = !isTextFile && !isBinaryFile && !isAPI; // nera failas ir nera ap
                     <a class="social-link fa fa-instagram" href="#" target="_blank" title="Instagram"></a>
                     <a class="social-link fa fa-linkedin-square" href="#" target="_blank" title="Linkedin"></a>
                 </div>
-                <p class="copyright">&copy; 2024 - All rights reserved</p>
+                <p class="copyright">&copy; 2026 - All rights reserved</p>
             </footer
         </body>
         
         </html>`;
     }
-    
+
+    if (trimmedPath === ''){
+    }
+
     return res.end(responseContent);
 });
 
@@ -105,3 +129,6 @@ server.init = () => {
 };
 
 export { server };
+
+
+
