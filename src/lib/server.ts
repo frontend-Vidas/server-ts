@@ -111,7 +111,7 @@ server.httpServer = http.createServer(async (req: IncomingMessage, res: ServerRe
                 <p class="copyright">&copy; 2026 - All rights reserved</p>
             </footer
             
-            <sript src="/js/main.js" type="module" defer></script>
+            <script src="/js/main.js" type="module" defer></script>
         </body>
         
         </html>`;
