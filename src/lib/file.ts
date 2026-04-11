@@ -7,8 +7,8 @@ type File = {
     fullPublicPath: (trimmedFilePath: string) => string;
     create: (dir: string, fileName: string, content: any) => Promise<[boolean, string | Error]>;
     read: (dir: string, fileName: string) => Promise<[boolean, string | Error]>;
-    readPublic: (dir: string, fileName: string) => Promise<[boolean, string]>;
-    readPublicBinary: (dir: string, fileName: string) => Promise<[boolean, string | Buffer]>;
+    readPublic: (trimmedFilePath: string) => Promise<[boolean, string]>;
+    readPublicBinary: (trimmedFilePath: string) => Promise<[boolean, string | Buffer]>;
     update: (dir: string, fileName: string, content: any) => Promise<[boolean, string | Error]>;
     delete: (dir: string, fileName: string) => Promise<[boolean, string | Error]>;
 }
@@ -24,12 +24,12 @@ const file = {} as File;
 file.fullPath = (dir: string, fileName: string) => {
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = path.dirname(__filename);
-    return path.join(__dirname, '../.data', dir, fileName);
+    return path.join(__dirname, '../../.data', dir, fileName);
 }
 file.fullPublicPath = (trimmedFilePath: string) => {
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = path.dirname(__filename);
-    return path.join(__dirname, '../public', trimmedFilePath);
+    return path.join(__dirname, '../../public', trimmedFilePath);
 }
 
 /**
@@ -61,13 +61,13 @@ file.create = async (dir: string, fileName: string, content: any): Promise<[bool
  * @param {string} fileName Norimo failo pavadinimas su jo pletiniu
  * @returns {Promise<[boolean, string | Error]>} Sekmes atveju - failo turinys; Klaidos atveju - klaida
  */
-file.read = async (dir: string, fileName: string): Promise<[boolean, string | Error]> => {
+file.read = async (dir: string, fileName: string): Promise<[false, string] | [true, Error]> => {
     try {
         const filePath = file.fullPath(dir, fileName);
         const fileContent = await fs.readFile(filePath, 'utf-8');
         return [false, fileContent];
     } catch (error) {
-        return [true, error] as [boolean, Error];
+        return [true, error as  Error];
     }
 }
 

@@ -1,6 +1,7 @@
 import http, { IncomingMessage, ServerResponse } from 'node:http';
 //import { text } from 'node:stream/consumers';
 import { file } from './file.js';
+import { type } from 'node:os';
 
 
 type Server = {
@@ -18,7 +19,7 @@ server.httpServer = http.createServer(async (req: IncomingMessage, res: ServerRe
 
     const baseURL = `https${ssl}://${req.headers.host}`
     const parsedURL = new URL(req.url ?? '', baseURL);
-    const httpMethod = req.method ? req.method.toLocaleLowerCase() : 'get';
+    const httpMethod = req.method ? req.method.toLowerCase() : 'get';
     const trimmedPath = parsedURL.pathname
         .replace(/^\/+|\/+$/g, '')
         .replace(/\/\/+/g, '/');
@@ -31,17 +32,61 @@ server.httpServer = http.createServer(async (req: IncomingMessage, res: ServerRe
     const isBinaryFile = binaryFileExtensions.includes(fileExtension); // galune: .png, .jpg, .webp, .eot, .ttf, ...
     const isAPI = trimmedPath.startsWith('api/'); // url prasideda: /api/...
     const isPage = !isTextFile && !isBinaryFile && !isAPI; // nera failas ir nera api
+    
+    //const user: User = {
+    //    name: 'Jonas',
+    //    surname: 'Jonaitis',
+    //    age: 9
+    //};
 
-    console.log(httpMethod, trimmedPath);
+    //type MimeType = {[key: string]: string};
+    type Mimes = Record<string, string>;
 
-    let responseContent = 'ERROR: neturiu tai, ko tu nori...';
+    const MIMES: Mimes = {
+        html: 'text/html',
+        css: 'text/css',
+        js: 'text/javascript',
+        json: 'application/json',
+        txt: 'text/plain',
+        svg: 'image/svg+xml',
+        xml: 'application/xml',
+        ico: 'image/vnd.microsoft.icon',
+        jpeg: 'image/jpeg',
+        jpg: 'image/jpeg',
+        png: 'image/png',
+        webp: 'font/webp',
+        woff2: 'font/woff2',
+        woff: 'font/woff',
+        ttf: 'font/ttf',
+        webmanifest: 'application/manifest+json',
+    }
+
+    let responseContent:string | Buffer = 'ERROR: neturiu tai, ko tu nori...';
 
     if (isTextFile){
-       responseContent = 'TEKSTINIS FAILAS';
+        const [err, msg] = await file.readPublic(trimmedPath);
+        res.writeHead(err ? 404 : 200, {
+            'Content-Type': MIMES[fileExtension],
+            'cache-control': `max-age=60`,
+        }); 
+        if (err) {
+            responseContent = msg;
+        } else {
+            responseContent = msg;
+        }
     }
 
     if (isBinaryFile){
-       responseContent = 'BINARY FAILAS';
+        const [err, msg] = await file.readPublicBinary(trimmedPath);
+        res.writeHead(err ? 404 : 200, {
+            'Content-Type': MIMES[fileExtension],
+            'cache-control': `max-age=60`,
+        }); 
+        if (err) {
+            responseContent = msg;
+        } else {
+            responseContent = msg;
+        }
     }
     
     if (isAPI){
@@ -69,18 +114,13 @@ server.httpServer = http.createServer(async (req: IncomingMessage, res: ServerRe
             <link rel="stylesheet" href="/css/button.css">
             <link rel="stylesheet" href="/css/header.css">
             <link rel="stylesheet" href="/css/main.css">
-
-            <link rel="stylesheet" href="/css/main.css">
-            <link rel="stylesheet" href="/css/main.min.css">
-            <link rel="stylesheet" href="/css/main.6dkdlg8hf71.css">
-            <link rel="stylesheet" href="/css/main.6dkdlg8hf71.6dkdlg8hf71.css">
-            <link rel="stylesheet" href="/css/main.css?v=2">
-            <link rel="stylesheet" href="/css/main.css?v=6dkdlg8hf71">
         </head>
         
         <body>
             <header class="container">
+            <a href="/">
                 <img class="logo" src="https://tropikalis.github.io/44-astronautas/img/Clay.svg" alt="Logo">
+                </a>
                 <nav class="main-nav">
                     <a class="link" href="#">About</a>
                     <a class="link" href="#">Portfolio</a>
@@ -91,7 +131,7 @@ server.httpServer = http.createServer(async (req: IncomingMessage, res: ServerRe
         
             <main class="container">
                 <div class="left-column">
-                    <h1 class="main-title"><span>404</span> Lost in Space</h1>
+                    <h1 class="main-title"><span>404</span> Lost in space</h1>
                     <p class="description">Lorem ipsum dolor, sit amet consectetur adipisicing elit. Placeat quos aliquam minus consectetur corporis velit sequi obcaecati, omnis, et saepe porro ipsam assumenda repudiandae?</p>
                     <div class="button-group">
                         <a class="button" href="#">Go home</a>
