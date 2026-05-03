@@ -6,7 +6,7 @@ type File = {
     fullPath: (dir: string, fileName: string) => string;
     fullPublicPath: (trimmedFilePath: string) => string;
     create: (dir: string, fileName: string, content: any) => Promise<[boolean, string | Error]>;
-    read: (dir: string, fileName: string) => Promise<[boolean, string | Error]>;
+    read: (dir: string, fileName: string) => Promise<[false, string] | [true, Error]>;
     readPublic: (trimmedFilePath: string) => Promise<[boolean, string]>;
     readPublicBinary: (trimmedFilePath: string) => Promise<[boolean, string | Buffer]>;
     update: (dir: string, fileName: string, content: any) => Promise<[boolean, string | Error]>;
@@ -67,7 +67,7 @@ file.read = async (dir: string, fileName: string): Promise<[false, string] | [tr
         const fileContent = await fs.readFile(filePath, 'utf-8');
         return [false, fileContent];
     } catch (error) {
-        return [true, error as  Error];
+        return [true, error as Error];
     }
 }
 

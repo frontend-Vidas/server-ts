@@ -26,7 +26,7 @@ Request object:
 {
   "name": "Jonas",
   "email": "jonas@jonas.lt",
-  "pasword": "suppersecredpassword",
+  "pasword": "supersecretpassword",
   "age": 99
 }
 ```
